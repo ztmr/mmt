@@ -149,7 +149,7 @@ folderLoop:
 		if !r {
 			continue folderLoop
 		}
-		color.Green("Looking at %s", f.Name())
+		color.Green("GoProV2 Looking at %s", f.Name())
 
 		err = godirwalk.Walk(filepath.Join(params.Input, f.Name()), &godirwalk.Options{
 			Callback: func(osPathname string, de *godirwalk.Dirent) error {
@@ -182,6 +182,8 @@ folderLoop:
 						filename := fmt.Sprintf("%s%s-%s%s", x[:2], x[4:][:4], x[2:][:2], filepath.Ext(x))
 						rfpsFolder, err := getRfpsFolder(osPathname)
 						if err != nil {
+							inlineCounter.SetFailure(err, filename)
+							wg.Done()
 							return godirwalk.SkipThis
 						}
 						additionalDir := ""
@@ -327,7 +329,7 @@ func importFromGoProV1(params utils.ImportParams) utils.Result {
 		if !r {
 			continue
 		}
-		color.Green("Looking at %s", f.Name())
+		color.Green("GoProV1 Looking at %s", f.Name())
 
 		err = godirwalk.Walk(filepath.Join(params.Input, f.Name()), &godirwalk.Options{
 			Callback: func(osPathname string, de *godirwalk.Dirent) error {
