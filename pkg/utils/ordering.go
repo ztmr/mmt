@@ -21,14 +21,10 @@ func GetOrder(sortoptions SortOptions, GetLocation locationUtil, osPathname, out
 
 	var wg sync.WaitGroup
 
+	location := fallbackFromConfig()
+
 	for _, item := range order {
 		switch item {
-		case "date":
-			dayFolder = filepath.Join(dayFolder, mediaDate)
-		case "camera":
-			if sortoptions.ByCamera {
-				dayFolder = filepath.Join(dayFolder, deviceName)
-			}
 		case "location":
 			if GetLocation == nil {
 				continue
@@ -36,7 +32,6 @@ func GetOrder(sortoptions SortOptions, GetLocation locationUtil, osPathname, out
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				location := fallbackFromConfig()
 				locationFromFile, locerr := GetLocation.GetLocation(osPathname)
 				if locerr == nil {
 					reverseLocation, reverseerr := ReverseLocation(*locationFromFile)
@@ -47,16 +42,30 @@ func GetOrder(sortoptions SortOptions, GetLocation locationUtil, osPathname, out
 						}
 					}
 				}
-				if sortoptions.ByLocation {
-					dayFolder = filepath.Join(dayFolder, location)
-				}
 			}()
+		default:
+		}
+	}
+
+	wg.Wait()
+
+	for _, item := range order {
+		switch item {
+		case "date":
+			dayFolder = filepath.Join(dayFolder, mediaDate)
+		case "camera":
+			if sortoptions.ByCamera {
+				dayFolder = filepath.Join(dayFolder, deviceName)
+			}
+		case "location":
+			if sortoptions.ByLocation {
+				dayFolder = filepath.Join(dayFolder, location)
+			}
 
 		default:
 			// Not supported
 		}
 	}
-	wg.Wait()
 
 	if _, err := os.Stat(dayFolder); os.IsNotExist(err) {
 		_ = os.MkdirAll(dayFolder, 0o755)
